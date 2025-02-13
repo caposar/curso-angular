@@ -7,9 +7,9 @@ body {
     height: fit-content;
 }
 
-form button {
+/* form button {
     margin-right: 1rem;
-}
+} */
 
 mat-form-field {
     width: 100%;
@@ -20,4 +20,8 @@ mat-form-field {
 
 .contenedor-botones {
     margin-top: 1rem;
+}
+
+.contenedor-botones button {
+    margin-right: 1rem;
 }
