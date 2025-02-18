@@ -20,6 +20,6 @@ export const appConfig: ApplicationConfig = {
         dateA11yLabel: 'LL',
         monthYearA11yLabel: 'MMMM YYYY'
       }
-    })
+    }), provideAnimationsAsync(), provideAnimationsAsync()
   ]
 };
