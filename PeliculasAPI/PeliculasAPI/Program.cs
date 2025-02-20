@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using PeliculasAPI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,9 +10,20 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddDbContext<ApplicationDbContext>(opciones => 
+    opciones.UseSqlServer("name=DefaultConnection"));
+
 builder.Services.AddOutputCache(opciones => 
 {
     opciones.DefaultExpirationTimeSpan = TimeSpan.FromSeconds(60);
+});
+
+var origenesPermitidos = builder.Configuration.GetValue<string>("OrigenesPermitidos")!.Split(",");
+
+builder.Services.AddCors(opciones => {
+    opciones.AddDefaultPolicy(opcionesCORS => {
+        opcionesCORS.WithOrigins(origenesPermitidos).AllowAnyMethod().AllowAnyHeader();
+    });
 });
 
 var app = builder.Build();
@@ -23,10 +35,12 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-app.UseOutputCache();
+app.UseCors();
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseOutputCache();
 
 app.Run();
