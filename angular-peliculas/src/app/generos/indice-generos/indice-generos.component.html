@@ -26,5 +26,8 @@
             <tr mat-header-row *matHeaderRowDef="columnasAMostrar"></tr>
             <tr mat-row *matRowDef="let row; columns: columnasAMostrar"></tr>
         </table>
+
+        <mat-paginator showFirstLastButtons [length]="cantidadTotalRegistros" [pageSize]="paginacion.recordsPorPagina"
+        [pageSizeOptions]="[5, 10, 50]" class="mat-elevation-z8" (page)="actualizarPaginacion($event)"></mat-paginator>
     </ng-container>
 </app-listado-generico>

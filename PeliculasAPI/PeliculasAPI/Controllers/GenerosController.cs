@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using PeliculasAPI.DTOs;
 using PeliculasAPI.Entidades;
+using PeliculasAPI.Utilidades;
 
 namespace PeliculasAPI.Controllers
 {
@@ -28,8 +29,11 @@ namespace PeliculasAPI.Controllers
 
         [HttpGet] // api/generos
         [OutputCache(Tags = [cacheTag])]
-        public async Task<List<GeneroDTO>> Get()
+        public async Task<List<GeneroDTO>> Get([FromQuery] PaginacionDTO paginacion)
         {
+            var queryable = context.Generos;
+            await HttpContext.InsertarParametrosPaginacionEnCabecera(queryable);
+
             //var generos = await context.Generos.ToListAsync();
 
             //var generosDTOs = mapper.Map<List<GeneroDTO>>(generos);
@@ -37,7 +41,10 @@ namespace PeliculasAPI.Controllers
             //return generosDTOs;
 
             // Mas Eficiente porque trae solo los datos que necesita
-            return await context.Generos.ProjectTo<GeneroDTO>(mapper.ConfigurationProvider).ToListAsync();
+            return await queryable
+                .OrderBy(g => g.Nombre)
+                .Paginar(paginacion)
+                .ProjectTo<GeneroDTO>(mapper.ConfigurationProvider).ToListAsync();
         }
 
         [HttpGet("{id:int}", Name = "ObtenerGeneroPorId")] // api/generos/500
