@@ -1,3 +1,8 @@
 <h2>Editar Género</h2>
 
-<app-formulario-genero [modelo]="genero" (posteoFormulario)="guardarCambios($event)"></app-formulario-genero>
+@if (genero) {
+    <app-mostrar-errores [errores]="errores"></app-mostrar-errores>
+    <app-formulario-genero [modelo]="genero" (posteoFormulario)="guardarCambios($event)"></app-formulario-genero>
+} @else {
+    <app-cargando></app-cargando>
+}
