@@ -33,7 +33,7 @@ export class GenerosService {
     return this.http.post(this.urlBase, genero);
   }
 
-  public borrar(id: number): Observable<any>{
+  public borrar(id: number): Observable<any> {
     return this.http.delete(`${this.urlBase}/${id}`);
   }
 }
