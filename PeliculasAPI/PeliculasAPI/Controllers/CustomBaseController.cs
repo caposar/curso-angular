@@ -7,7 +7,6 @@ using PeliculasAPI.DTOs;
 using PeliculasAPI.Entidades;
 using PeliculasAPI.Utilidades;
 using System.Linq.Expressions;
-using System.Security.Cryptography;
 
 namespace PeliculasAPI.Controllers
 {
@@ -25,6 +24,15 @@ namespace PeliculasAPI.Controllers
             this.mapper = mapper;
             this.outputCacheStore = outputCacheStore;
             this.cacheTag = cacheTag;
+        }
+
+        protected async Task<List<TDTO>> Get<TEntidad, TDTO>(
+         Expression<Func<TEntidad, object>> ordenarPor)
+         where TEntidad : class
+        {
+            return await context.Set<TEntidad>()
+                .OrderBy(ordenarPor)
+                .ProjectTo<TDTO>(mapper.ConfigurationProvider).ToListAsync();
         }
 
         protected async Task<List<TDTO>> Get<TEntidad, TDTO>(PaginacionDTO paginacion,

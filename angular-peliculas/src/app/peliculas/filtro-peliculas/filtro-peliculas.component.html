@@ -32,3 +32,8 @@
 </form>
 
 <app-listado-peliculas [peliculas]="peliculas"></app-listado-peliculas>
+
+<mat-paginator showFirstLastButtons [length]="cantidadTotalRegistros" [pageIndex]="paginacion.pagina"
+[pageSize]="paginacion.recordsPorPagina" [pageSizeOptions]="[5, 10, 50]" class="mat-elevation-z8"
+(page)="actualizarPaginacion($event)"
+></mat-paginator>
