@@ -6,11 +6,12 @@ import { MatIconModule } from "@angular/material/icon";
 import { PeliculasService } from '../peliculas.service';
 import { RouterLink } from '@angular/router';
 import { SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
+import { AutorizadoComponent } from "../../seguridad/autorizado/autorizado.component";
 
 @Component({
   selector: 'app-listado-peliculas',
   standalone: true,
-  imports: [ListadoGenericoComponent, MatButtonModule, MatIconModule, RouterLink, SweetAlert2Module],
+  imports: [ListadoGenericoComponent, MatButtonModule, MatIconModule, RouterLink, SweetAlert2Module, AutorizadoComponent],
   templateUrl: './listado-peliculas.component.html',
   styleUrl: './listado-peliculas.component.css'
 })

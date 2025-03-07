@@ -11,19 +11,23 @@
             Buscar Películas</a>
     </div>
 
-    <div>
-        <a mat-button routerLink="generos">Géneros</a>
-    </div>
-
-    <div>
-        <a mat-button routerLink="actores">Actores</a>
-    </div>
-    
-    <div>
-        <a mat-button routerLink="cines">Cines</a>
-    </div>
-
-    <div>
-        <a mat-button routerLink="peliculas/crear">Crear Pélicula</a>
-    </div>
+    <app-autorizado rol="admin">
+        <ng-container autorizado>
+            <div>
+                <a mat-button routerLink="generos">Géneros</a>
+            </div>
+        
+            <div>
+                <a mat-button routerLink="actores">Actores</a>
+            </div>
+            
+            <div>
+                <a mat-button routerLink="cines">Cines</a>
+            </div>
+        
+            <div>
+                <a mat-button routerLink="peliculas/crear">Crear Pélicula</a>
+            </div>
+        </ng-container>
+    </app-autorizado>
 </mat-toolbar>
