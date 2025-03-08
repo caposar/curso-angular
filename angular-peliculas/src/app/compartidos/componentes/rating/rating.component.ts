@@ -9,10 +9,14 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './rating.component.html',
   styleUrl: './rating.component.css'
 })
-export class RatingComponent {
+export class RatingComponent implements OnInit {
   
+  ngOnInit(): void {
+    this.ratingAnterior = this.ratingSeleccionado;
+  }
+
   @Input({required: true, transform: (valor: number) => Array(valor).fill(0)})
-  maximoRating!: number[];
+  maximoRating! : number[];
 
   @Input()
   ratingSeleccionado = 0;
@@ -26,17 +30,18 @@ export class RatingComponent {
     this.ratingSeleccionado = indice + 1;
   }
 
-  manejarMouseLeave() {
-    if (this.ratingAnterior !== 0) {
+  manejarMouseLeave(){
+    if (this.ratingAnterior !== 0){
       this.ratingSeleccionado = this.ratingAnterior;
     } else {
       this.ratingSeleccionado = 0;
     }
   }
 
-  manejarClick(indice: number) {
+  manejarClick(indice: number){
     this.ratingSeleccionado = indice + 1;
     this.ratingAnterior = this.ratingSeleccionado;
     this.votado.emit(this.ratingSeleccionado);
   }
+
 }
