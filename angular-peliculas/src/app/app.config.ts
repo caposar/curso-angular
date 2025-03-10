@@ -8,6 +8,7 @@ import { provideMomentDateAdapter } from '@angular/material-moment-adapter';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
 import { authInterceptor } from './seguridad/token-interceptor-http';
+import { errorInterceptor } from './seguridad/error.interceptor';
 
 
 export const appConfig: ApplicationConfig = {
@@ -25,7 +26,7 @@ export const appConfig: ApplicationConfig = {
         monthYearA11yLabel: 'MMMM YYYY'
       }
     }),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, errorInterceptor])),
     importProvidersFrom([SweetAlert2Module.forRoot()])
   ]
 };
