@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using PeliculasAPI.Entidades;
 
 namespace PeliculasAPI.Controllers
 {
@@ -94,6 +95,39 @@ namespace PeliculasAPI.Controllers
             }
         }
 
+        [HttpPost("logout")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+        {
+            if (string.IsNullOrEmpty(request.RefreshToken))
+            {
+                return BadRequest(new { message = "Refresh token requerido." });
+            }
+
+            var refreshTokenEntity = await context.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
+
+            if (refreshTokenEntity == null)
+            {
+                return BadRequest(new { message = "Refresh token no encontrado." });
+            }
+
+            if (refreshTokenEntity.Expiration < DateTime.UtcNow)
+            {
+                return BadRequest(new { message = "El refresh token ha expirado." });
+            }
+
+            if (refreshTokenEntity.Revoked)
+            {
+                return BadRequest(new { message = "El refresh token ya ha sido revocado." });
+            }
+
+            // Revocar el refresh token usado
+            await RevocarRefreshToken(refreshTokenEntity);
+
+            return Ok(new { message = "Sesión cerrada en este dispositivo." });
+        }
+
         [HttpPost("HacerAdmin")]
         public async Task<IActionResult> HacerAdmin(EditarClaimDTO editarClaimDTO)
         {
@@ -134,6 +168,7 @@ namespace PeliculasAPI.Controllers
         {
             var claims = new List<Claim>
             {
+                new Claim(JwtRegisteredClaimNames.Sub, identityUser.Id), // ID único del usuario (de la BD)
                 new Claim("email", identityUser.Email!),
                 new Claim("lo que yo quiera", "cualquier valor")
             };
@@ -142,22 +177,84 @@ namespace PeliculasAPI.Controllers
 
             claims.AddRange(claimsDB);
 
-            var llave = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["llavejwt"]!));
+            var issuer = configuration["Jwt:Issuer"];
+            var audience = configuration["Jwt:Audience"];
+            var secretKey = configuration["Jwt:SecretKey"]!;
+            var llave = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(llave, SecurityAlgorithms.HmacSha256);
+            var expiracion = DateTime.UtcNow.AddMinutes(configuration.GetValue<int>("JWT:ExpirationInMinutes"));
+            var expiracionRefreshToken = DateTime.UtcNow.AddDays(7);
 
-            //var expiracion = DateTime.UtcNow.AddYears(1);
-            var expiracion = DateTime.UtcNow.AddMinutes(1);
+            var tokenDeSeguridad = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: expiracion,
+                signingCredentials: creds
+            );
 
-            var tokenDeSeguridad = new JwtSecurityToken(issuer: null, audience: null, claims: claims,
-                expires: expiracion, signingCredentials: creds);
+            var accessToken = new JwtSecurityTokenHandler().WriteToken(tokenDeSeguridad);
 
-            var token = new JwtSecurityTokenHandler().WriteToken(tokenDeSeguridad);
+            // Generar y guardar refresh token en la base de datos
+            var refreshToken = Guid.NewGuid().ToString("N");
+            await GuardarRefreshTokenEnBaseDeDatos(identityUser.Id, refreshToken, expiracionRefreshToken);
 
             return new RespuestaAutenticacionDTO
             {
-                Token = token,
-                Expiracion = expiracion
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
             };
+        }
+
+        [HttpPost("renovar-token")]
+        [AllowAnonymous]
+        public async Task<ActionResult<RespuestaAutenticacionDTO>> RenovarToken([FromBody] RefreshTokenRequest request)
+        {
+            if (string.IsNullOrEmpty(request?.RefreshToken))
+            {
+                return BadRequest(new { message = "El refresh token es requerido." });
+            }
+
+            var refreshTokenEntity = await context.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
+
+            if (refreshTokenEntity == null || refreshTokenEntity.Expiration < DateTime.UtcNow || refreshTokenEntity.Revoked)
+            {
+                return BadRequest(new { message = "Refresh token no encontrado, expirado o revocado." });
+            }
+
+            var user = await userManager.FindByIdAsync(refreshTokenEntity.UserId);
+            if (user == null)
+            {
+                return BadRequest(new { message = "Usuario no encontrado." });
+            }
+
+            // Revocar el refresh token usado
+            await RevocarRefreshToken(refreshTokenEntity);
+
+            var respuesta = await ConstruirToken(user);
+            return Ok(respuesta);
+        }
+
+        private async Task GuardarRefreshTokenEnBaseDeDatos(string userId, string refreshToken, DateTime expiration)
+        {
+            var refreshTokenEntity = new RefreshToken
+            {
+                UserId = userId,
+                Token = refreshToken,
+                Expiration = expiration
+            };
+
+            await context.RefreshTokens.AddAsync(refreshTokenEntity);
+            await context.SaveChangesAsync();
+        }
+
+        private async Task RevocarRefreshToken(RefreshToken refreshToken)
+        {
+            refreshToken.RevokedAt = DateTime.UtcNow;
+            refreshToken.Revoked = true;
+            await context.SaveChangesAsync();
         }
     }
 }

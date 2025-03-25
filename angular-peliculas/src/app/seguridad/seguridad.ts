@@ -3,9 +3,9 @@ export interface CredencialesUsuarioDTO {
     password: string;
 }
 
-export interface RespuestaAutenticacionDTO{
-    token: string;
-    expiracion: Date;
+export interface RespuestaAutenticacionDTO {
+    accessToken: string;
+    refreshToken: string;
 }
 
 export interface UsuarioDTO {
